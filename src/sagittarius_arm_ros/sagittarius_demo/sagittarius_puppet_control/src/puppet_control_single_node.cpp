@@ -26,32 +26,32 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "sagittarius_puppet_control_single");
   ros::NodeHandle n;
 
-  // 定阅主机械臂的关节角度
-  ros::Subscriber sub_positions = n.subscribe("joint_states", 100, joint_state_cb);
-  ros::Publisher pub_positions = n.advertise<sdk_sagittarius_arm::ArmRadControl>("joint/commands", 100);
-  ros::Publisher pub_gripper = n.advertise<std_msgs::Float64>("gripper/command", 100);
-  ros::ServiceClient srv_robot_info = n.serviceClient<sdk_sagittarius_arm::ArmInfo>("get_robot_info");
-  // 释放主机械臂的锁舵功能
-  ros::Publisher pub_torque = n.advertise<std_msgs::String>("control_torque", 1);
-  ros::Rate loop_rate(100);
-  bool success;
+// Subscribe to the joint angle of the main robot arm
+   ros::Subscriber sub_positions = n.subscribe("joint_states", 100, joint_state_cb);
+   ros::Publisher pub_positions = n.advertise<sdk_sagittarius_arm::ArmRadControl>("joint/commands", 100);
+   ros::Publisher pub_gripper = n.advertise<std_msgs::Float64>("gripper/command", 100);
+   ros::ServiceClient srv_robot_info = n.serviceClient<sdk_sagittarius_arm::ArmInfo>("get_robot_info");
+   // Release the rudder lock function of the main robotic arm
+   ros::Publisher pub_torque = n.advertise<std_msgs::String>("control_torque", 1);
+   ros::Rate loop_rate(100);
+   bool success;
 
-  // 等待SDK节点开始订阅后，才开始发送。
-  while ((pub_positions.getNumSubscribers() < 1 || joint_states.position.size() < 1) && ros::ok())
-  {
-    ros::spinOnce();
-    loop_rate.sleep();
-  }
-  while ((pub_torque.getNumSubscribers() < 1) && ros::ok())
-  {
-    ros::spinOnce();
-    loop_rate.sleep();
-  }
-  std_msgs::String msg;
-  msg.data = "close";
-  pub_torque.publish(msg);
+   // Wait for the SDK node to start subscribing before starting to send.
+   while ((pub_positions.getNumSubscribers() < 1 || joint_states.position.size() < 1) && ros::ok())
+   {
+     ros::spinOnce();
+     loop_rate.sleep();
+   }
+   while ((pub_torque.getNumSubscribers() < 1) && ros::ok())
+   {
+     ros::spinOnce();
+     loop_rate.sleep();
+   }
+   std_msgs::String msg;
+   msg.data = "close";
+   pub_torque.publish(msg);
 
-  // 获取机械臂的关节数
+   // Get the number of joints of the robotic arm
   sdk_sagittarius_arm::ArmInfo robot_info_srv;
   success = srv_robot_info.call(robot_info_srv);
   if (!success)
